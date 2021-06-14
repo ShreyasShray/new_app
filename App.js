@@ -1,21 +1,28 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import * as React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import {createSwitchNavigator, createAppContainer} from 'react-navigation';
+import WelcomeScreen from './screens/WelcomeScreen';
+import TeacherHomeScreen from './screens/TeacherHomeScreen';
+import ListOfStudentsScreen from './screens/ListOfStudentsScreen';
+import ListOfSubjects from './screens/ListOfSubjects';
+import StudentHomeScreen from './screens/StudentHomeScreen';
+import ListOfSubjectsStudent from './screens/ListOfSubjectsStudent';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+export default class App extends React.Component{
+  render(){
+    return(
+      <AppContainer/>
+    );
+  }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const SwitchNavigator = createSwitchNavigator({
+  WelcomeScreen:{screen:WelcomeScreen},
+  TeacherHomeScreen:{screen:TeacherHomeScreen},
+  ListOfStudentsScreen:{screen:ListOfStudentsScreen},
+  ListOfSubjects:{screen:ListOfSubjects},
+  StudentHomeScreen:{screen:StudentHomeScreen},
+  ListOfSubjectsStudent:{screen:ListOfSubjectsStudent}
 });
+
+const AppContainer = createAppContainer(SwitchNavigator);

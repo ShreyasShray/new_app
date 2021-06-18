@@ -5,13 +5,12 @@ import {
     StyleSheet
 } from 'react-native';
 
-export default class ListOfSubjects extends React.Component{
+export default class StudentSubjectsList extends React.Component{
     render(){
         return(
             <View style={{flex:1}}>
-                <Text style={{marginTop:20, textAlign:'center'}}>List Of Subjects</Text>
+                <Text style={{marginTop:20, textAlign:'center'}}>List Of Subjects for Students</Text>
             </View>
         );
     }
 }
-

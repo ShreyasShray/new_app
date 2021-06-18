@@ -4,9 +4,9 @@ import {createSwitchNavigator, createAppContainer} from 'react-navigation';
 import WelcomeScreen from './screens/WelcomeScreen';
 import TeacherHomeScreen from './screens/TeacherHomeScreen';
 import ListOfStudentsScreen from './screens/ListOfStudentsScreen';
-import ListOfSubjects from './screens/ListOfSubjects';
+import TeacherSubjectsList from './screens/TeacherSubjectsList';
 import StudentHomeScreen from './screens/StudentHomeScreen';
-import ListOfSubjectsStudent from './screens/ListOfSubjectsStudent';
+import StudentSubjectsList from './screens/StudentSubjectsList';
 
 export default class App extends React.Component{
   render(){
@@ -20,9 +20,9 @@ const SwitchNavigator = createSwitchNavigator({
   WelcomeScreen:{screen:WelcomeScreen},
   TeacherHomeScreen:{screen:TeacherHomeScreen},
   ListOfStudentsScreen:{screen:ListOfStudentsScreen},
-  ListOfSubjects:{screen:ListOfSubjects},
+  TeacherSubjectsList:{screen:TeacherSubjectsList},
   StudentHomeScreen:{screen:StudentHomeScreen},
-  ListOfSubjectsStudent:{screen:ListOfSubjectsStudent}
+  StudentSubjectsList:{screen:StudentSubjectsList}
 });
 
 const AppContainer = createAppContainer(SwitchNavigator);

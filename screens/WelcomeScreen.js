@@ -27,24 +27,56 @@ export default class WelcomeScreen extends React.Component{
             create_password:'',
             confirm_password:'',
             isModalVisible:false,
-            User:"Student"
+            value:"",
+
         }
     }
     
     userLogin=async()=>{
         firebase.auth().signInWithEmailAndPassword(this.state.email_id, this.state.password)
         .then(()=>{
-            if(this.state.User === "Teacher"){
-                this.props.navigation.navigate("TeacherHomeScreen")
-            } else {
-                this.props.navigation.navigate("StudentHomeScreen")
-            }
+            var user;
+            db.collection("users")
+            .where( "email_id", "==",this.state.email_id)
+            .get()
+            .then((snapshot)=>{
+                snapshot.forEach((doc)=>{
+                    user = doc.data()
+                })
+                console.log(user.value)
+                if((user.value)==="Teacher"){
+                    this.props.navigation.navigate("TeacherHomeScreen")
+                    console.log("Teacher Screen")
+                }else{
+                    this.props.navigation.navigate("StudentHomeScreen")
+                    console.log("Student Screen")
+                }
+            })
         })
         .catch((error)=> {
             var errorCode = error.code;
             var errorMessage = error.message;
             return Alert.alert(errorMessage)
           })
+    }
+
+    userSignUp=()=>{
+        if(this.state.create_password!= this.state.confirm_password){
+            Alert.alert("Password not matching")
+        }else{
+            firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.confirm_password)
+            .then(()=>{
+                db.collection("users").add({
+                    first_name:this.state.first_name,
+                    last_name:this.state.last_name,
+                    email_id:this.state.email,
+                    contact:this.state.contact,
+                    address:this.state.address,
+                    value:this.state.value
+                });
+                return Alert.alert("User Added Successfully")
+            })
+        }
     }
 
     showModal = () =>{
@@ -100,13 +132,13 @@ export default class WelcomeScreen extends React.Component{
                                 <View style={{flexDirection:'row'}}>
                                 <div className="radio">
                                     <label>
-                                        <input type="radio" value="Teacher" />
+                                        <input type="radio" value="Teacher" checked={this.state.value==="Teacher"} onChange={this.onChange} />
                                         Teacher
                                     </label>
                                 </div>
                                 <div className="radio">
                                     <label>
-                                        <input type="radio" value="Student" />
+                                        <input type="radio" value="Student" checked={this.state.value==="Student"} onChange={this.onChange} />
                                         Student
                                     </label>
                                 </div>
@@ -115,6 +147,7 @@ export default class WelcomeScreen extends React.Component{
                             <View>
                                 <TouchableOpacity
                                     style={styles.modalButton}
+                                    onPress={()=>{this.userSignUp()}}
                                 >
                                     <Text style={styles.modalButtonText}>Sign Up</Text>
                                 </TouchableOpacity>
@@ -131,12 +164,17 @@ export default class WelcomeScreen extends React.Component{
         )
     }
 
+    onChange=(event)=>{
+        this.setState({value:event.target.value})
+    }
+
     render(){
         return(
             <View style={{backgroundColor:"#f8be85", flex:1}}>
                 {
                     this.showModal()
                 }
+                <Text>Selected: {this.state.value}</Text>
                 <View style={{marginTop:60}}>
                     <TextInput 
                         placeholder="Email" 

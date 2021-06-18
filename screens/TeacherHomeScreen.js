@@ -1,25 +1,77 @@
 import * as React from 'react';
-import { TouchableOpacity } from 'react-native';
 import {
     View,
     Text,
-    StyleSheet
+    StyleSheet,
+    Modal,
+    ScrollView,
+    TouchableOpacity,
+    KeyboardAvoidingView,
+    TextInput
 } from 'react-native';
 
 export default class TeacherHomeScreen extends React.Component{
+
+    constructor(){
+        super();
+        this.state={
+            isModalVisible:false,
+            class_name:'',
+            student_code:'',
+            teacher_code:'',
+            school_name:''
+        }
+    }
+
+    showModal=()=>{
+        return(
+            <Modal
+                visible={this.state.isModalVisible}
+                animationType="slide"
+                transparent={true}
+            >
+                <KeyboardAvoidingView>
+                    <ScrollView>
+                        <Text style={{marginTop:30, fontSize:18, fontWeight:'bold', textAlign:'center'}}>Create Class</Text>
+                        <TextInput
+                            style={styles.inputBox}
+                            placeholder="Class Name"
+                            onChangeText={(text)=>{this.setState({class_name:text})}}
+                        />
+                        <TextInput
+                            style={styles.inputBox}
+                            placeholder="School Name"
+                            onChangeText={(text)=>{this.setState({school_name:text})}}
+                        />
+                        <TextInput
+                            style={styles.inputBox}
+                            placeholder="Teacher Code"
+                            onChangeText={(text)=>{this.setState({teacher_code:text})}}
+                        />
+                        <TextInput
+                            style={styles.inputBox}
+                            placeholder="Student Code"
+                            onChangeText={(text)=>{this.setState({student_code:text})}}
+                        />
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </Modal>
+        );
+    }
+
     render(){
         return(
             <View>
                 <View style={{flex:1, justifyContent:'center'}}>
-                    <Text style={{textAlign:'center', marginTop:20}}>List of Classes</Text>
-                    <TouchableOpacity style={styles.buttonStyle} onPress={()=>{this.props.navigation.navigate("ListOfStudentsScreen")}}>
-                        <Text style={styles.buttonText}>Class 8</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.buttonStyle}>
-                        <Text style={styles.buttonText}>Class 9</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.buttonStyle}>
-                        <Text style={styles.buttonText}>Class 10</Text>
+                    {
+                        this.showModal()
+                    }
+                    <TouchableOpacity
+                        style={styles.buttonStyle}
+                    >
+                        <Text style={styles.buttonText}>
+                            Create Class Group
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -36,9 +88,12 @@ const styles = StyleSheet.create({
         padding:8,
         alignItems:'center',
         alignSelf:"center",
-        marginTop:40
+        marginTop:40,
     },
     buttonText:{
 
-    }
+    },
+    inputBox:{
+        
+    }   
 })

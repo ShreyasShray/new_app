@@ -1,27 +1,65 @@
 import * as React from 'react';
-import { TouchableOpacity } from 'react-native';
 import {
     View,
     Text,
-    StyleSheet
+    StyleSheet,
+    TextInput,
+    TouchableOpacity
 } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import db from '../config'
+import firebas from 'firebase';
 
 export default class StudentHomeScreen extends React.Component{
     constructor(){
         super();
         this.state={
-            class_code:''
+            user_id:firebas.auth().currentUser.email,
+            class_code:'',
+            doc_id:''
         }
     }
+
+    joinUser=()=>{
+        var userData;
+        db.collection('users').where("email_id", "==", this.state.user_id)
+        .get()
+        .then((snapshot)=>{
+            snapshot.forEach((doc)=>{
+                userData=doc.data()
+            })
+            console.log(userData)
+            db.collection('classes').where("student_code", "==", this.state.class_code)
+            .get()
+            .then((snapshot)=>{
+                snapshot.forEach((doc)=>{
+                    this.setState({doc_id:doc.id})
+                })
+                db.collection("classes").doc(this.state.doc_id).collection("students").add({
+                    email_id:userData.email_id,
+                    contact:userData.contact,
+                    address:userData.address,
+                    first_name:userData.first_name,
+                    last_name:userData.last_name
+                })
+            })
+        })
+    }
+
     render(){
         return(
             <View>
                 <View style={{flex:1, justifyContent:'center'}}>
                     <TextInput
+                        style={styles.inputBox}
                         placeholder="Class Code"
                         onChangeText={(text)=>{this.setState({class_code:text})}}
                     />
+                    <TouchableOpacity
+                        style={styles.buttonStyle}
+                        onPress={()=>{this.joinUser()}}
+                    >
+                        <Text style={styles.buttonText}>Join</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         );
@@ -29,17 +67,33 @@ export default class StudentHomeScreen extends React.Component{
 }
 
 const styles = StyleSheet.create({
-    buttonStyle:{
-        backgroundColor:"orange",
-        borderWidth:1,
-        borderRadius:8,
+    inputBox:{
+        marginTop:200,
         width:280,
-        padding:8,
-        alignItems:'center',
-        alignSelf:"center",
-        marginTop:40
+        borderWidth:1,
+        paddingLeft:5,
+        borderRadius:4,
+        alignSelf:'center'
+    },
+    buttonStyle:{
+        marginTop:40,
+        alignSelf:'center',
+        backgroundColor:"orange",
+        width:200,
+        height:40,
+        borderRadius:10,
+        shadowColor:"#000",
+        shadowOffset:{
+            width:0,
+            height:8
+        },
+        shadowOpacity:0.40,
+        justifyContent:'center'
     },
     buttonText:{
-
+        fontSize:18,
+        fontWeight:'bold',
+        textAlign:'center',
+        padding:8
     }
 })

@@ -72,7 +72,9 @@ export default class WelcomeScreen extends React.Component{
                     email_id:this.state.email,
                     contact:this.state.contact,
                     address:this.state.address,
-                    value:this.state.value
+                    value:this.state.value,
+                    status:false,
+                    code:''
                 });
                 return Alert.alert("User Added Successfully")
             })
@@ -83,7 +85,7 @@ export default class WelcomeScreen extends React.Component{
         return(
             <Modal
                     animationType="slide"
-                    transparent={true}
+                    transparent={false}
                     visible={this.state.isModalVisible}
                 >
                     <ScrollView style={{flex:1, backgroundColor:'#fff'}}>
@@ -191,11 +193,13 @@ export default class WelcomeScreen extends React.Component{
                     <TouchableOpacity
                         style={styles.buttonStyle}
                         onPress={()=>{this.userLogin()}}
-                    ><Text style={styles.buttonText}> Login </Text></TouchableOpacity>
+                    ><Text style={styles.buttonText}> Login </Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.buttonStyle, {marginBottom:40}]}
                         onPress={()=>{this.setState({isModalVisible:true})}}
-                    ><Text style={styles.buttonText}> Sign Up </Text></TouchableOpacity>
+                    ><Text style={styles.buttonText}> Sign Up </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         );

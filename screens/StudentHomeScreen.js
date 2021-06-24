@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import db from '../config'
 import firebas from 'firebase';
+import { Alert } from 'react-native';
 
 export default class StudentHomeScreen extends React.Component{
     constructor(){
@@ -15,7 +16,8 @@ export default class StudentHomeScreen extends React.Component{
         this.state={
             user_id:firebas.auth().currentUser.email,
             class_code:'',
-            doc_id:''
+            doc_id:'',
+            userJoinData:false
         }
     }
 
@@ -42,13 +44,61 @@ export default class StudentHomeScreen extends React.Component{
                     last_name:userData.last_name
                 })
             })
+            .catch((error)=>{
+                return Alert.alert("Code is Not Correct")
+            })
         })
+    }
+
+    getUserJoinData=async()=>{
+        db.collection('users').where("email_id", "==", this.state.user_id)
+        .get()
+        .then((snapshot)=>{
+            snapshot.forEach((doc)=>{
+                this.setState({userJoinData:doc.data().join})
+            })
+        })
+    }
+
+    componentDidMount=()=>{
+        this.getUserJoinData()
     }
 
     render(){
         return(
-            <View>
                 <View style={{flex:1, justifyContent:'center'}}>
+                    {
+                        this.state.userJoinData?(
+                            <View>
+                                <Text>Select Any Subject to Submmit the HomeWork</Text>
+                                <TouchableOpacity
+                                    style={styles.buttonStyle}
+                                >
+                                    <Text style={styles.buttonText}>English</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.buttonStyle}
+                                >
+                                    <Text style={styles.buttonText}>Hindi</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.buttonStyle}
+                                >
+                                    <Text style={styles.buttonText}>Math</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.buttonStyle}
+                                >
+                                    <Text style={styles.buttonText}>Science</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.buttonStyle}
+                                >
+                                    <Text style={styles.buttonText}>Social Science</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ):(
+                            <View>
                     <TextInput
                         style={styles.inputBox}
                         placeholder="Class Code"
@@ -60,7 +110,9 @@ export default class StudentHomeScreen extends React.Component{
                     >
                         <Text style={styles.buttonText}>Join</Text>
                     </TouchableOpacity>
-                </View>
+                    </View>
+                    )
+                    }
             </View>
         );
     }

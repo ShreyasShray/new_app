@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import db from '../config';
 import firebase from 'firebase';
+import { ListItem } from 'react-native-elements';
 
 export default class TeacherHomeScreen extends React.Component{
 
@@ -119,6 +120,19 @@ export default class TeacherHomeScreen extends React.Component{
         })
     }
 
+    keyExtractor = (item, index) => index.toString();
+
+    renderItem=({item, i}) => {
+        return(
+            <ListItem
+                key={i}
+                title={item.class_name + " " + item.school_name}
+                titleStyle={{ color: "black", fontWeight: "bold" }}
+                bottomDivider
+            />
+        );
+        }
+
     componentDidMount=()=>{
         this.getClasses()
     }
@@ -137,12 +151,29 @@ export default class TeacherHomeScreen extends React.Component{
                     <TouchableOpacity
                         style={styles.buttonStyle}
                         onPress={()=>{this.setState({isModalVisible:true})}}
-                    >
+                        >
                         <Text style={styles.buttonText}>
                             Create Class Group
                         </Text>
                     </TouchableOpacity>
                 </View>
+                        <View>
+                        {
+                            this.state.classes.length === 0?(
+                                <View>
+                                    <Text style={{marginTop:100}}>
+                                        No Classes Created click the button to Create Classes
+                                    </Text>
+                                </View>
+                            ):(
+                                <FlatList
+                                    keyExtractor={this.keyExtractor}
+                                    data={this.state.classes}
+                                    renderItem={this.renderItem}
+                                />
+                            )
+                        }
+                        </View>
             </View>
         );
     }

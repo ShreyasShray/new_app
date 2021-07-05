@@ -8,25 +8,31 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     TextInput,
-    FlatList
+    FlatList,
+    Alert
 } from 'react-native';
 import db from '../config';
 import firebase from 'firebase';
 import { ListItem } from 'react-native-elements';
+import AppHeader from '../components/AppHeader';
 
 export default class TeacherHomeScreen extends React.Component{
 
     constructor(){
         super();
         this.state={
-            user_id:firebase.auth().currentUser.email,
+            userId:firebase.auth().currentUser.email,
             isModalVisible:false,
+            isModalVisible2:false,
             class_name:'',
             student_code:'',
             teacher_code:'',
             school_name:'',
             classes:[],
-            doc_id:''
+            name:'',
+            contact:'',
+            address:'',
+            teacher_join_code:''
         },
         this.requestRef=null
     }
@@ -83,40 +89,88 @@ export default class TeacherHomeScreen extends React.Component{
         );
     }
 
+    showModal2=()=>{
+        return(
+            <Modal
+                visible={this.state.isModalVisible2}
+                animationType="slide"
+                transparent={false}
+            >
+                <KeyboardAvoidingView>
+                    <ScrollView>
+                        <Text style={{marginTop:30, fontSize:18, fontWeight:'bold', textAlign:'center'}}>Join Class</Text>
+                        <TextInput
+                            placeholder="Class Code"
+                            onChangeText={(text)=>{this.setState({teacher_join_code:text})}}
+                            style={styles.inputBox}
+                        />
+                        <TouchableOpacity
+                            style={styles.modalButtonStyle}
+                            onPress={()=>{this.joinUser()}}
+                        >
+                            <Text style={styles.buttonText} >
+                                Join
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.modalButtonStyle, {marginBottom:50}]}
+                            onPress={()=>{this.setState({isModalVisible2:false})}}
+                        >
+                            <Text style={styles.buttonText} >
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </Modal>
+        );
+    }
+
+    joinUser=async()=>{
+        db.collection("classes").where("teacher_code", "==", this.state.teacher_join_code)
+        .get()
+        .then((snapshot)=>{
+            snapshot.forEach((doc)=>{
+                var teachers = doc.data().teachers
+                teachers.push(this.state.userId)
+                db.collection("classes").doc(doc.id).update({
+                    teachers:teachers
+                })
+                Alert.alert("Class Joined")
+            })
+        })
+    }
+
+    getUserDetails=async()=>{
+        db.collection("users").where("email_id", "==", this.state.userId)
+        .get()
+        .then((snapshot)=>{
+            snapshot.forEach((doc)=>{
+                this.setState({
+                    name:doc.data().first_name + " " + doc.data().last_name,
+                    contact:doc.data().contact,
+                    address:doc.data().address
+                })
+            })
+        })
+    }
+
     createClass=()=>{
         db.collection("classes").add({
             class_name:this.state.class_name,
             school_name:this.state.school_name,
             teacher_code:this.state.teacher_code,
-            student_code:this.state.student_code
+            student_code:this.state.student_code,
+            teachers:[{email_id:this.state.userId}]
         })
-        db.collection('users').where("email_id", "==", this.state.user_id)
-        .get()
-        .then((snapshot)=>{
-            snapshot.forEach((doc)=>{
-                this.setState({doc_id:doc.id})
-            })
-            db.collection('users').doc(this.state.doc_id).update({
-                code:this.state.teacher_code
-            })
-        })
+        return Alert.alert("Class created")
     }
 
-    getClasses=async() => {
-        var teacherCode;
-        db.collection('users').where("email_id", "==", this.state.user_id)
-        .get()
-        .then((snapshot)=>{
-            snapshot.forEach((doc)=>{
-                teacherCode=doc.data().code
-            })
-            this.requestRef = db.collection('classes').where("teacher_code", "==", teacherCode)
-            .onSnapshot((snapshot)=>{
-                var requestedClass = snapshot.docs.map((document)=>{return document.data()})
-                this.setState({classes:requestedClass})
-                console.log(this.state.classes)
-            })
-
+    getClasses=async()=>{
+        this.requestRef = db.collection("classes").where("teachers", "array-contains", this.state.userId)
+        .onSnapshot((snapshot)=>{
+            var classes = snapshot.docs.map((doc)=>{return doc.data()})
+            this.setState({classes:classes})
         })
     }
 
@@ -126,14 +180,23 @@ export default class TeacherHomeScreen extends React.Component{
         return(
             <ListItem
                 key={i}
-                title={item.class_name + " " + item.school_name}
+                title={item.class_name}
                 titleStyle={{ color: "black", fontWeight: "bold" }}
+                rightElement={
+                    <TouchableOpacity
+                        style={[styles.buttonStyle, {marginTop:0, marginBottom:0}]}
+                        onPress={()=>{this.props.navigation.navigate("StudentsList", {teacher_code:item.teacher_code})}}
+                    >
+                        <Text style={styles.buttonText}>View</Text>
+                    </TouchableOpacity>
+                }
                 bottomDivider
             />
         );
         }
 
     componentDidMount=()=>{
+        this.getUserDetails()
         this.getClasses()
     }
 
@@ -143,11 +206,38 @@ export default class TeacherHomeScreen extends React.Component{
 
     render(){
         return(
-            <View>
-                <View style={{flex:1, justifyContent:'center'}}>
+            <View style={{flex:1, justifyContent:'center', backgroundColor:"#F8BE85"}}>
+                <AppHeader title="Home Screen" />
+                {
+                    this.showModal()
+                }
+                {
+                    this.showModal2()
+                }
+                <View>
                     {
-                        this.showModal()
+                        this.state.classes.length === 0?(
+                            <View>
+                                <Text style={{marginTop:100, textAlign:'center', fontSize:20}}>
+                                    No Classes Found Create or Join the class
+                                </Text>
+                            </View>
+                        ):(
+                            <FlatList
+                            keyExtractor={this.keyExtractor}
+                            data={this.state.classes}
+                                renderItem={this.renderItem}
+                                />
+                        )
                     }
+                </View>
+                <View style={{flexDirection:'row', justifyContent:'space-evenly'}}>
+                    <TouchableOpacity
+                        style={styles.buttonStyle}
+                        onPress={()=>{this.setState({isModalVisible2:true})}}
+                    >
+                        <Text style={styles.buttonText}>Join Class</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.buttonStyle}
                         onPress={()=>{this.setState({isModalVisible:true})}}
@@ -157,23 +247,6 @@ export default class TeacherHomeScreen extends React.Component{
                         </Text>
                     </TouchableOpacity>
                 </View>
-                        <View>
-                        {
-                            this.state.classes.length === 0?(
-                                <View>
-                                    <Text style={{marginTop:100}}>
-                                        No Classes Created click the button to Create Classes
-                                    </Text>
-                                </View>
-                            ):(
-                                <FlatList
-                                    keyExtractor={this.keyExtractor}
-                                    data={this.state.classes}
-                                    renderItem={this.renderItem}
-                                />
-                            )
-                        }
-                        </View>
             </View>
         );
     }
@@ -181,7 +254,7 @@ export default class TeacherHomeScreen extends React.Component{
 
 const styles = StyleSheet.create({
     buttonStyle:{
-        marginTop:200,
+        marginTop:50,
         marginBottom:50,
         alignSelf:'center',
         backgroundColor:"orange",

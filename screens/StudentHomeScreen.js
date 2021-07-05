@@ -4,116 +4,137 @@ import {
     Text,
     StyleSheet,
     TextInput,
-    TouchableOpacity
+    TouchableOpacity,
+    ScrollView,
+    Alert,
+    Modal
 } from 'react-native';
 import db from '../config'
 import firebas from 'firebase';
-import { Alert } from 'react-native';
+import { ListItem } from 'react-native-elements'
 
 export default class StudentHomeScreen extends React.Component{
     constructor(){
         super();
         this.state={
-            user_id:firebas.auth().currentUser.email,
+            userId:firebas.auth().currentUser.email,
+            user_details:'',
             class_code:'',
-            doc_id:'',
-            userJoinData:false
-        }
+            classes:[],
+            isModalVisible:false,
+            heading:'',
+            subject:''
+        },
+        this.requestRef = null
     }
 
-    joinUser=()=>{
-        var userData;
-        db.collection('users').where("email_id", "==", this.state.user_id)
+    showModal=()=>{
+        return(
+            <Modal
+                animationType="slide"
+                visible={this.state.isModalVisible}
+                transparent={false}
+            >
+                <TextInput
+                    placeholder="Heading"
+                    onChangeText={(text)=>{this.setState({heading})}}
+                    style={[styles.inputBox, {marginTop:40}]}
+                />
+                <TextInput
+                    placeholder="Subject"
+                    onChangeText={(text)=>{this.setState({heading})}}
+                    style={[styles.inputBox, {marginTop:40}]}
+                />
+                <TouchableOpacity
+                    style={styles.buttonStyle}
+                >
+                    <Text style={styles.buttonText}>Add Image</Text>
+                </TouchableOpacity>
+            </Modal>
+        );
+    }
+
+    getUserDetails=async()=>{
+        db.collection("users").where("email_id", "==", this.state.userId)
         .get()
         .then((snapshot)=>{
             snapshot.forEach((doc)=>{
-                userData=doc.data()
-            })
-            console.log(userData)
-            db.collection('classes').where("student_code", "==", this.state.class_code)
-            .get()
-            .then((snapshot)=>{
-                snapshot.forEach((doc)=>{
-                    this.setState({doc_id:doc.id})
-                })
-                db.collection("classes").doc(this.state.doc_id).collection("students").add({
-                    email_id:userData.email_id,
-                    contact:userData.contact,
-                    address:userData.address,
-                    first_name:userData.first_name,
-                    last_name:userData.last_name
-                })
-            })
-            .catch((error)=>{
-                return Alert.alert("Code is Not Correct")
+                this.setState({user_details:doc.data()})
+                console.log(this.state.user_details)
             })
         })
     }
 
-    getUserJoinData=async()=>{
-        db.collection('users').where("email_id", "==", this.state.user_id)
+    joinUser=async()=>{
+        db.collection("classes").where("student_code", "==", this.state.class_code)
         .get()
         .then((snapshot)=>{
             snapshot.forEach((doc)=>{
-                this.setState({userJoinData:doc.data().join})
+                var students = doc.data().students
+                students.push(this.state.userId)
+                db.collection("classes").doc(doc.id).update({
+                    students:students
+                })
+                var student_details = doc.data().student_details
+                student_details.push(this.state.user_details)
+                db.collection("classes").doc(doc.id).update({
+                    student_details:student_details
+                })
+                return Alert.alert("Class Joined")
             })
+        })
+    }
+
+    getClasses=async()=>{
+        this.requestRef = db.collection("classes").where("students", "array-contains", this.state.userId)
+        .onSnapshot((snapshot)=>{
+            var classes = snapshot.docs.map((doc)=>{return doc.data()})
+            this.setState({classes:classes})
         })
     }
 
     componentDidMount=()=>{
-        this.getUserJoinData()
+        this.getClasses()
+        this.getUserDetails()
+    }
+    
+    componentWillUnmount=()=>{
+        this.requestRef()
     }
 
     render(){
         return(
-                <View style={{flex:1, justifyContent:'center'}}>
-                    {
-                        this.state.userJoinData?(
-                            <View>
-                                <Text>Select Any Subject to Submmit the HomeWork</Text>
-                                <TouchableOpacity
-                                    style={styles.buttonStyle}
-                                >
-                                    <Text style={styles.buttonText}>English</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.buttonStyle}
-                                >
-                                    <Text style={styles.buttonText}>Hindi</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.buttonStyle}
-                                >
-                                    <Text style={styles.buttonText}>Math</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.buttonStyle}
-                                >
-                                    <Text style={styles.buttonText}>Science</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.buttonStyle}
-                                >
-                                    <Text style={styles.buttonText}>Social Science</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ):(
-                            <View>
-                    <TextInput
-                        style={styles.inputBox}
-                        placeholder="Class Code"
-                        onChangeText={(text)=>{this.setState({class_code:text})}}
-                    />
-                    <TouchableOpacity
-                        style={styles.buttonStyle}
-                        onPress={()=>{this.joinUser()}}
-                    >
-                        <Text style={styles.buttonText}>Join</Text>
-                    </TouchableOpacity>
-                    </View>
+            <ScrollView style={{flex:1, backgroundColor:"#F8BE85"}}>
+                {
+                    this.showModal()
+                }
+                {
+                    this.state.classes.length===0?(
+                        <View>
+                            <TextInput
+                                style={styles.inputBox}
+                                placeholder="Class Code"
+                                onChangeText={(text)=>{this.setState({class_code:text})}}
+                            />
+                            <TouchableOpacity
+                                style={styles.buttonStyle}
+                                onPress={()=>{this.joinUser()}}
+                            >
+                                <Text style={styles.buttonText}>Join</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ):(
+                        <View>
+                            <TouchableOpacity
+                                style={[styles.buttonStyle, {marginTop:120}]}
+                                onPress={()=>{this.setState({isModalVisible:true})}}
+                            >
+                                <Text style={styles.buttonText}>Submit Home Work</Text>
+                            </TouchableOpacity>
+                        </View>
                     )
-                    }
-            </View>
+                }
+            </ScrollView>
         );
     }
 }

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import db from '../config';
 import firebase from 'firebase';
+import AppHeader from '../components/AppHeader';
 
 export default class WelcomeScreen extends React.Component{
     constructor(){
@@ -73,8 +74,6 @@ export default class WelcomeScreen extends React.Component{
                     contact:this.state.contact,
                     address:this.state.address,
                     value:this.state.value,
-                    status:false,
-                    code:''
                 });
                 return Alert.alert("User Added Successfully")
             })
@@ -173,6 +172,7 @@ export default class WelcomeScreen extends React.Component{
     render(){
         return(
             <View style={{backgroundColor:"#f8be85", flex:1}}>
+                <AppHeader title="Welcome Screen" />
                 {
                     this.showModal()
                 }
